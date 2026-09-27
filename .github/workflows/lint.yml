@@ -1,0 +1,39 @@
+name: DevOps Infrastructure Linting Pipeline
+
+# Trigger this workflow automatically on every git push or pull request
+on: [push, pull_request]
+
+jobs:
+  validate_code:
+    name: Lint & Verify Code Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Clone Repository Code
+        uses: actions/checkout@v4
+
+      - name: 2. Set Up Terraform Environment
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: 3. Audit Terraform Formatting
+        run: |
+          cd pi-network
+          terraform init -backend=false
+          terraform validate
+
+      - name: 4. Set Up Python Runtime
+        uses: actions/setup-python@v5
+        with:
+          python_version: "3.11"
+
+      - name: 5. Install Ansible Linter Utilities
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-lint
+
+      - name: 6. Audit Ansible Playbook Best Practices
+        run: |
+          cd ansible-sysops
+          ansible-lint system_check.yml
