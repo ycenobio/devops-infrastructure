@@ -1,0 +1,55 @@
+---
+- name: Automate Workstation Maintenance and Infrastructure Auditing
+  hosts: local_workstation
+  become: true  # Runs tasks with sudo privileges where required
+
+  tasks:
+    - name: 1. System Maintenance | Update apt package registry repository
+      apt:
+        update_cache: yes
+      tags: maintenance
+
+    - name: 2. Core Services | Verify Docker service daemon is active and running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+      tags: services
+
+    - name: 3. Infrastructure Audit | Gather details on the isolated Terraform network
+      docker_network_info:
+        name: production_isolated_network
+      register: network_status
+      tags: audit
+
+    - name: 4. Debug Outputs | Display the current status of the subnet configuration
+      debug:
+        msg: "Infrastructure Verified! Subnet {{ network_status.network.IPAM.Config[0].Subnet }} is currently live."
+      when: network_status.exists
+      tags: audit
+    - name: 5. SSH Security | Force cryptographic SSH key authentication only
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      tags: security
+
+    - name: 6. SSH Security | Turn off root user logins via SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+      tags: security
+
+    - name: 7. SSH Security | Reject blank or empty user passwords
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitEmptyPasswords'
+        line: 'PermitEmptyPasswords no'
+      tags: security
+
+    - name: 8. SSH Security | Safely restart SSH service daemon to apply policies
+      systemd:
+        name: ssh
+        state: restarted
+      tags: security
