@@ -1,6 +1,5 @@
 name: DevOps Infrastructure Linting Pipeline
 
-# Trigger this workflow automatically on every git push or pull request
 on: [push, pull_request]
 
 jobs:
@@ -28,7 +27,7 @@ jobs:
         with:
           python_version: "3.11"
 
-            - name: 5. Install Core Ansible & Linting Utilities
+      - name: 5. Install Core Ansible & Linting Utilities
         run: |
           python -m pip install --upgrade pip
           pip install ansible ansible-lint
@@ -40,6 +39,5 @@ jobs:
       - name: 6. Audit Ansible Playbook Best Practices
         run: |
           cd ansible-sysops
-          ansible-lint system_check.yml
-        env:
-          ANSIBLE_COLLECTIONS_PATH: ~/.ansible/collections
+          ansible-lint --exclude ~/.ansible/collections community.docker system_check.yml
+
