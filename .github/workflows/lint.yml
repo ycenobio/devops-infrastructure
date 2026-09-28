@@ -32,12 +32,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible ansible-lint
 
-      - name: 5.5 Pre-Fetch Required Ansible Collections
-        run: |
-          ansible-galaxy collection install community.docker
-
       - name: 6. Audit Ansible Playbook Best Practices
         run: |
           cd ansible-sysops
-          ansible-lint --exclude ~/.ansible/collections community.docker system_check.yml
+          ansible-lint system_check.yml
 
