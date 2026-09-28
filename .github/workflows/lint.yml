@@ -41,4 +41,5 @@ jobs:
         run: |
           cd ansible-sysops
           ansible-lint system_check.yml
-
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ~/.ansible/collections
