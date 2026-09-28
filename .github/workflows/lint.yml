@@ -15,7 +15,7 @@ jobs:
       - name: 2. Set Up Terraform Environment
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.6.0"
+          terraform_version: "1.6.5"
 
       - name: 3. Audit Terraform Formatting
         run: |
