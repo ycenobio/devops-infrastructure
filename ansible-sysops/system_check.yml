@@ -1,6 +1,6 @@
 ---
 - name: Automate Workstation Maintenance and Infrastructure Auditing
-  hosts: local_workstation
+  hosts: remote_pi
   become: true  # Runs tasks with sudo privileges where required
 
   tasks:

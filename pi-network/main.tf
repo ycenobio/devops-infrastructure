@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "docker" {
-  host = "unix:///var/run/docker.sock"
+  host = "ssh://yovanny@10.0.0.164"
 }
 
 resource "docker_network" "private_bridge_net" {
