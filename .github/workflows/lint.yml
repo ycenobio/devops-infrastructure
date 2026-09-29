@@ -10,20 +10,16 @@ jobs:
     steps:
       - name: 1. Clone Repository Code
         uses: actions/checkout@v4
-
       - name: 2. Set Up Terraform Environment
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.6.5"
-
       - name: 3. Audit Terraform Formatting
         run: |
           cd pi-network
           terraform init -backend=false
           terraform validate
-
       - name: 4. Verify Ansible Playbook Code Exists
         run: |
           cd ansible-sysops
           cat system_check.yml
-

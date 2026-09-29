@@ -17,7 +17,7 @@
       tags: services
 
     - name: 3. Infrastructure Audit | Gather details on the isolated Terraform network
-      docker_network_info: # noqa unknown-module
+      community.docker.docker_network_info:
         name: production_isolated_network
       register: network_status
       tags: audit
