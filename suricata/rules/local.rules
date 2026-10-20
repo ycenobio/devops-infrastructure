@@ -1,1 +1,2 @@
 alert icmp any any -> any any (msg:"HOME LAB - ICMP Ping Detected"; sid:1000001; rev:1;)
+alert tcp any any -> 10.10.10.10 445 (msg:"ATTACK - Active Directory SMB Brute Force Attempt"; flags:S,12; threshold:type threshold, track by_src, count 30, seconds 10; sid:1000003; rev:1;)
