@@ -74,3 +74,25 @@ A socket loop was executed from the Debian router to force rapid connection atte
 for i in {1..35}; do timeout 0.1 bash -c "echo > /dev/tcp/10.10.10.10/445" 2>/dev/null; done
 ```
 *Outcome:* The loop successfully tripped the signature, seamlessly routing real-time alerts through the encrypted log agent to display the event signature: **`ATTACK - Active Directory SMB Brute Force Attempt`** on the central console.
+
+## 6. Advanced Extension: TCP Stealth Port-Scan Detection
+
+### 6.1 Threat Context & Design Logic
+To mitigate initial network reconnaissance and mapping operations (e.g., Nmap stealth scans), a behavioral rule was created to flag automated port sweeping. This signature targets half-open handshake attempts designed to bypass traditional application layer log files.
+
+### 6.2 Signature Configuration
+The following threshold rule was added to `/etc/suricata/rules/local.rules`:
+```text
+alert tcp any any -> 10.10.10.0/24 any (msg:"ATTACK - TCP Stealth Port Scan Detected"; flags:S; threshold:type threshold, track by_src, count 30, seconds 5; sid:1000002; rev:1;)
+```
+* **Traffic Control:** Monitors the complete isolated internal subnet (`10.10.10.0/24`) across any inbound port destination matrix.
+* **Behavioral Thresholding:** Utilizes a tight tracking window (`seconds 5`) to ignore normal network behavior, only firing a warning if a single scanner host (`track by_src`) initiates **30 unique SYN-only handshakes**.
+
+### 6.3 Automated Validation Simulation
+To cross the behavioral counting floor, a rapid sequential port loop was executed from the laptop gateway interface:
+```bash
+for port in {1..35}; do timeout 0.05 bash -c "echo > /dev/tcp/10.10.10.10/\$port" 2>/dev/null; done
+```
+
+### 6.4 Operational Outcome
+The execution successfully tripped the threshold matrix. The local logging engine appended the alert to `eve.json`, and the background systemd agent instantly piped it to the central management dashboard to render the event profile: **`ATTACK - TCP Stealth Port Scan Detected`**.
