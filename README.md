@@ -1,68 +1,69 @@
-# Local-First Hybrid DevOps Infrastructure Pipeline
 
-An enterprise-grade, cost-optimized infrastructure management portfolio built completely within a localized laboratory ecosystem. This repository demonstrates the implementation of a full-scale microservices environment utilizing Infrastructure as Code (IaC), programmatic configuration management baselines, secure version tracking, and Continuous Integration (CI) pipes without incurring active cloud provider resource overhead.
+## Lab Deployment & Daily Verification Runbook
 
-## 🏗️ Architecture Blueprint
+This guide details the exact sequential steps required to bring the multi-node engineering lab from a powered-down state to full operational status, followed by infrastructure validation checks.
 
-```text
-       [ Workstation Workspace ]               [ Secure Automated Deployment ]
-+------------------------------------+       +---------------------------------+
+### Phase 1: Infrastructure Boot Sequence
 
-|  Debian/Kali Laptop                |       |  Local Engine Topology          |
-|  * Management Core & Code Editor   |       |                                 |
-|  * Terraform Configuration Hooks   | ----> |  Isolated Subnet Network        |
-|  * Ansible Hardening Manifests     |       |  (10.10.10.0/24 Bridge Net)     |
-|  * Local Git Repository Tracking   |       |               |                 |
-+------------------------------------+       |       +-------+-------+         |
+Follow this exact boot order to ensure dependencies (like DNS and authentication realms) are ready before client nodes attempt connections.
 
-                                             |       v               v         |
-                                             |  [Frontend]     [Backend Node]  |
-                                             |  Nginx Web      Redis Cache DB  |
-                                             |  Port 8080      (Dark Subnet)   |
-                                             +---------------------------------+
-```
+1. **Power on the Core Domain Controller:**
+   * Physically boot the Raspberry Pi 4 (`10.0.0.164`).
+   * Ensure the Ethernet link light is solid.
+   
+2. **Boot the Debian Linux Host Laptop:**
+   * Power on the laptop and log into your local environment.
+   * Verify the machine establishes its Wi-Fi network connection.
 
-## 🛠️ Technology Integration Matrix
-
-- **Infrastructure Engine:** Terraform (v1.6.0+) utilizing custom network drivers to isolate microservice containers dynamically.
-- **Configuration Management Engine:** Ansible Core for system-level patch cycles, service state guarantees, and security policies.
-- **Virtualization Core:** Docker Daemon managing decoupled frontend routing layers and backend caching layers.
-- **Operating System Baselines:** Debian and Kali Linux system kernels.
-- **Continuous Integration Pipeline:** GitHub Actions triggering lint testing, configuration mapping tests, and block syntax confirmation on every push.
+3. **Spin Up Virtual Environments (If Needed):**
+   * If running lab testing instances, launch your KVM hypervisor management tool and start your infrastructure VMs (`Debian-Automation-Gateway`, `win2k22`).
 
 ---
 
-## 🔒 Security Hardening Policies Implemented
+### Phase 2: Live Service Verification
 
-To ensure a true zero-trust deployment layout, the following security mechanics are explicitly defined via structural configurations:
+Once all physical and virtual nodes are powered on, execute these rapid verification checks from the **Debian Host Laptop** terminal to ensure the environment is healthy.
 
-1. **Dark Subnet Realities:** The backend Redis database cluster (`10.10.10.25`) is deployed completely devoid of host port maps. It remains unreachable from the outside internet, only receiving traffic originating internally from within the isolated bridge interface.
-2. **Cryptographic Only Authentication:** Automated Ansible playbooks rewrite `sshd_config` parameters on the fly, explicitly switching system verification parameters to enforce cryptographic SSH Key-Pairs only.
-3. **Attack Surface Reduction:** General interactive entry rules are locked down: `PermitRootLogin` is forced to `no`, and empty, null, or blank user password strings are systemically rejected by the kernel.
-4. **Secret Management Prevention:** A strict local `.gitignore` matrix prevents the exposure of binary system states, logs, and sensitive local provider tracking locks (`.terraform.lock.hcl`, `*.tfstate`).
-
----
-
-## 🚀 Execution & Operational Commands
-
-### 1. Network Subnet Infrastructure Provisioning (IaC)
+#### Step 1: Confirm Host Interface Configuration
+Verify that the primary Wi-Fi connection profile is actively routing queries to the private Domain Controller for private realm lookups.
 ```bash
-cd pi-network/
-terraform init      # Downloads the necessary layout provider engines
-terraform validate  # Confirms configuration syntax is structurally perfect
-terraform plan      # Generates a safe architectural dry-run preview
-terraform apply     # Provisions the network, backend node, and public frontend map
+cat /etc/resolv.conf
 ```
+* **Expected Output:** `nameserver 10.0.0.164` must be present at the top of the nameserver list.
 
-### 2. Automated OS Patching & Configuration Management
+#### Step 2: Native Active Directory SRV Record Lookups
+Confirm that the cross-node lookup path to the Samba AD database is working without requiring forced IP configurations.
 ```bash
-cd ansible-sysops/
-# Execute the playbooks securely with elevated permission callbacks
-ansible-playbook -i inventory.ini system_check.yml -K
+host -t SRV _ldap._tcp.corp.internal
 ```
+* **Expected Output:** `_ldap._tcp.corp.internal has SRV record 0 100 389 dc1.corp.internal.`
+
+#### Step 3: Check Share Enumeration via RPC
+Validate cross-platform network authentication using your Active Directory domain account credentials.
+```bash
+smbclient -L //10.0.0.164 -U yovanny
+```
+* **Expected Action:** Enter your domain password when prompted.
+* **Expected Output:** A clean list of hosted SMB shares including `sysvol`, `netlogon`, and `LabShare`.
 
 ---
 
-## 📈 Strategic Portfolio Engineering Highlights
-- **True Declarative Design:** 100% of network architectures and security boundaries are fully versioned, removing human error and "configuration drift."
-- **Financial Architecture Acumen:** Designed custom local network drivers to accurately simulate complex multi-cloud VPC subnets, eliminating the dynamic financial overhead of public cloud gateways.
+### Phase 3: Automated Pipeline Monitoring
+
+Execute the centralized automation script to verify the health of local intrusion detection logging and network endpoints.
+
+1. Run the health check framework using system privileges:
+   ```bash
+   sudo ./check_lab_health.sh
+   ```
+2. Inspect the consolidated monitoring log dashboard to ensure all components report `[OK]`:
+   ```bash
+   cat /var/log/lab_health.log
+   ```
+
+* **Target Health Metrics to Verify:**
+  * `[OK] Suricata Service is running.`
+  * `[OK] EveBox Local Agent is running.`
+  * `[OK] eve.json is actively updating.`
+  * `[OK] Raspberry Pi DC (10.0.0.164) is reachable.`
+  * `[OK] Active Directory DNS resolution for corp.internal is working.`
